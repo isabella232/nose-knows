@@ -39,8 +39,9 @@ and you can pass in ``transform_data/transformers/__init__.py`` to nose::
     OK
 
 The best practice here is to have a system like Jenkins run the unit test suite
-once in a while to create this map, and then incorporating downloading the
-knows output file from Jenkins.
+once in a while to create this map, and then creating a bash function/script to
+downloadthe knows output file from Jenkins and run it against the set of
+changed files from a commit.
 
 **nose-knows** is copyright 2013 Eventbrite and Contributors, and is made
 available under BSD-style license; see LICENSE for details.

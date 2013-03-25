@@ -1,7 +1,5 @@
 import logging
 import os
-import pprint
-import re
 import sys
 import threading
 
@@ -10,16 +8,18 @@ from collections import defaultdict
 import nose
 from nose.plugins import Plugin
 
+
 def parse_test_name(test_name, drop_prefixes):
     try:
         begin = test_name.index('<') + 1
         end = test_name.index('>')
         inside_brackets = test_name[begin:end]
     except ValueError, e:
-        return 'SKIPPED - could not figure out name'
+        raise
     return '.'.join(
         inside_brackets.split(' ', 1)[0].split('.')[drop_prefixes:-1],
     )
+
 
 class Knows(Plugin):
     name = 'knows'
@@ -30,6 +30,7 @@ class Knows(Plugin):
         self.output = True
         self.enableOpt = 'with-knows'
         self.test_name = ''
+        self.logger = logging.getLogger('nose.plugins.knows')
 
     def options(self, parser, env=os.environ):
         parser.add_option(
@@ -124,12 +125,25 @@ class Knows(Plugin):
             else:
                 if self.test_name:
                     filename = filename[len(self.knows_dir) + 1:]
+                    if self.test_name not in self.test_map[filename]:
+                        self.logger.info(
+                            'Found file %s touched by test %s.',
+                            filename,
+                            self.test_name,
+                        )
                     self.test_map[filename].add(self.test_name)
 
         return self.tracer
 
     def startTest(self, test):
-        self.test_name = parse_test_name(repr(test), self.drop_prefixes)
+        try:
+            self.test_name = parse_test_name(repr(test), self.drop_prefixes)
+        except ValueError, e:
+            self.logger.warning(
+                'Could not figure out test name from %s',
+                repr(test),
+            )
+            self.test_name = ''
 
     def stopTest(self, test):
         pass
