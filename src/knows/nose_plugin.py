@@ -93,7 +93,9 @@ class Knows(Plugin):
                 start_pos = abs_fname.index(self.knows_dir)
                 length = len(self.knows_dir) + 1
                 fname = abs_fname[start_pos + length:]
-                inputs.add(fname)
+            # Try to add the path regardless. It may or may not exist in the
+            # output file.
+            inputs.add(fname)
         with open(knows_file) as fh:
             for line in fh:
                 if line.strip(':\n') in inputs:
