@@ -13,10 +13,11 @@ def parse_test_name(test_name):
     begin = test_name.index('<') + 1
     end = test_name.index('>')
     inside_brackets = test_name[begin:end]
-    test_class, test_method = inside_brackets.split(' ', 1)
+    test_module_and_class, test_method = inside_brackets.split(' ', 1)
     if test_method.startswith('testMethod='):
         test_method = test_method[len('testMethod='):]
-    return test_class + ':' + test_method
+    test_module, test_class = test_module_and_class.rsplit('.', 1)
+    return test_module + ':' + test_class + '.' + test_method
 
 
 class Knows(Plugin):
@@ -45,19 +46,14 @@ class Knows(Plugin):
             help='Whether to output the mapping of files to unit tests.',
         )
         parser.add_option(
-            '--knows-drop-prefixes',
-            action='store',
-            type='int',
-            dest='knows_drop_prefixes',
-            default=1,
-            help='How many prefixes to drop from the test name.',
-        )
-        parser.add_option(
             '--knows-dir',
             type='string',
             dest='knows_dir',
             default='',
-            help='Include only this given directory (top level project dir)',
+            help='Include only this given directory. This should be your '
+                 'project directory name, and does not need to be an absolute '
+                 'path.',
+
         )
         parser.add_option(
             '--knows-exclude',
@@ -72,8 +68,7 @@ class Knows(Plugin):
         self.enabled = getattr(options, self.enableOpt)
         if self.enabled:
             input_files = config.testNames
-            self.drop_prefixes = options.knows_drop_prefixes
-            self.knows_dir = options.knows_dir
+            self.knows_dir = options.knows_dir.rstrip('/')
             self.exclude = []
             if options.knows_exclude:
                 self.exclude.extend(options.knows_exclude)
@@ -95,7 +90,7 @@ class Knows(Plugin):
         for f in input_files:
             abs_f = os.path.abspath(f)
             if os.path.exists(abs_f) and self.knows_dir in abs_f:
-                f = abs_f[len(self.knows_dir) + 1:]
+                f = abs_f[f.index(self.knows_dir) + len(self.knows_dir) + 1:]
             inputs.add(f)
         with open(knows_file) as fh:
             for line in fh:
@@ -120,9 +115,10 @@ class Knows(Plugin):
             if exclude_string in filename:
                 break
         else:
-            if self.test_name:
-                if self.knows_dir in filename:
-                    filename = filename[len(self.knows_dir) + 1:]
+            if self.test_name and self.knows_dir in filename:
+                start_pos = filename.index(self.knows_dir)
+                length = len(self.knows_dir) + 1
+                filename = filename[start_pos + length:]
 
                 if self.test_name not in self.test_map[filename]:
                     self.logger.info(
