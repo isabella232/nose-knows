@@ -9,16 +9,14 @@ import nose
 from nose.plugins import Plugin
 
 
-def parse_test_name(test_name, drop_prefixes):
-    try:
-        begin = test_name.index('<') + 1
-        end = test_name.index('>')
-        inside_brackets = test_name[begin:end]
-    except ValueError, e:
-        raise
-    return '.'.join(
-        inside_brackets.split(' ', 1)[0].split('.')[drop_prefixes:-1],
-    )
+def parse_test_name(test_name):
+    begin = test_name.index('<') + 1
+    end = test_name.index('>')
+    inside_brackets = test_name[begin:end]
+    test_class, test_method = inside_brackets.split(' ', 1)
+    if test_method.startswith('testMethod='):
+        test_method = test_method[len('testMethod='):]
+    return test_class + ':' + test_method
 
 
 class Knows(Plugin):
@@ -58,15 +56,15 @@ class Knows(Plugin):
             '--knows-dir',
             type='string',
             dest='knows_dir',
-            default=os.getcwd(),
-            help='Include only this given directory, usually top level project',
+            default='',
+            help='Include only this given directory (top level project dir)',
         )
         parser.add_option(
             '--knows-exclude',
             type='string',
+            action='append',
             dest='knows_exclude',
-            default='',
-            help='Exclude files from this comma-separated set of directories.',
+            help='Exclude files having this string (can use multiple times).',
         )
         super(Knows, self).options(parser, env=env)
 
@@ -78,7 +76,7 @@ class Knows(Plugin):
             self.knows_dir = options.knows_dir
             self.exclude = []
             if options.knows_exclude:
-                self.exclude = ','.split(options.knows_exclude.replace(' ', ''))
+                self.exclude.extend(options.knows_exclude)
             if not options.knows_out:
                 if input_files:
                     config.testNames = self.get_tests_to_run(
@@ -118,35 +116,36 @@ class Knows(Plugin):
 
     def tracer(self, frame, event, arg):
         filename = frame.f_code.co_filename
-        if filename.startswith(self.knows_dir):
-            for exclude_dir in self.exclude:
-                if filename.startswith(exclude_dir):
-                    break
-            else:
-                if self.test_name:
+        for exclude_string in self.exclude:
+            if exclude_string in filename:
+                break
+        else:
+            if self.test_name:
+                if self.knows_dir in filename:
                     filename = filename[len(self.knows_dir) + 1:]
-                    if self.test_name not in self.test_map[filename]:
-                        self.logger.info(
-                            'Found file %s touched by test %s.',
-                            filename,
-                            self.test_name,
-                        )
+
+                if self.test_name not in self.test_map[filename]:
+                    self.logger.info(
+                        'Found file %s touched by test %s.',
+                        filename,
+                        self.test_name,
+                    )
                     self.test_map[filename].add(self.test_name)
 
         return self.tracer
 
     def startTest(self, test):
         try:
-            self.test_name = parse_test_name(repr(test), self.drop_prefixes)
-        except ValueError, e:
+            self.test_name = parse_test_name(repr(test))
+        except Exception, e:
             self.logger.warning(
-                'Could not figure out test name from %s',
+                'Could not figure out test name from %s.',
                 repr(test),
             )
             self.test_name = ''
 
     def stopTest(self, test):
-        pass
+        self.test_name = ''
 
     def finalize(self, result):
         if self.output:
