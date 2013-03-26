@@ -87,11 +87,13 @@ class Knows(Plugin):
         tests_to_run = []
         match = False
         inputs = set()
-        for f in input_files:
-            abs_f = os.path.abspath(f)
-            if os.path.exists(abs_f) and self.knows_dir in abs_f:
-                f = abs_f[f.index(self.knows_dir) + len(self.knows_dir) + 1:]
-            inputs.add(f)
+        for fname in input_files:
+            abs_fname = os.path.abspath(fname)
+            if os.path.exists(abs_fname) and self.knows_dir in abs_fname:
+                start_pos = abs_fname.index(self.knows_dir)
+                length = len(self.knows_dir) + 1
+                fname = abs_fname[start_pos + length:]
+                inputs.add(fname)
         with open(knows_file) as fh:
             for line in fh:
                 if line.strip(':\n') in inputs:
