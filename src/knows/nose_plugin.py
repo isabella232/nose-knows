@@ -105,6 +105,14 @@ class Knows(Plugin):
                 else:
                     match = False
 
+        if not tests_to_run:
+            self.logger.error(
+                '## Found no tests to run, consider adding some? Files: %s ##',
+                ','.join(input_files),
+            )
+            # Return the tests to run to the previous state.
+            tests_to_run = input_files
+
         return tests_to_run
 
     def begin(self):
