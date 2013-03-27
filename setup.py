@@ -22,6 +22,7 @@ setup(
     include_package_data=True,
     zip_safe=True,
     entry_points={
-        'nose.plugins.0.10': ['knows = knows:Knows'],
+        'nose.plugins.0.10': ['knows = knows.nose_plugin:KnowsNosePlugin'],
+        'pytest11': ['knows = knows.pytest_plugin'],
     },
 )
