@@ -3,12 +3,29 @@ nose-knows
 ==========
 
 **nose-knows** is a nose plugin for figuring out which unit tests you should
-run after modifying code. It works by tracing your code during unit tests while
-given the ``--knows-out`` command, and creating an output file that can then be
-used to figure out which unit tests to run for each file modified. You can then
-pass in a list of files and only run the appropriate unit tests.
+run after modifying code. It works by tracing your code while you run unit
+tests, and creating an output file that can be used later.
 
-Examples::
+Installing
+==========
+
+You can install **nose-knows** through ``pip`` or ``easy-install``::
+
+    pip install nose-knows
+
+Or you can download the `latest development version`_, which may
+contain new features.
+
+Using nose-knows
+================
+
+**nose-knows** can be invoked in either input or output mode. In output mode
+(``--knows-out``) it will generate a ``.knows`` file that contains the mapping
+from a file in your code tree to the set of unit tests that run it. In input
+mode, it uses the ``.knows`` file to selectively run unit tests based on the
+files you pass in.
+
+Creating a ``.knows`` file::
 
     eyal-01575:src eyal$ nosetests --with-knows --knows-dir=$BASE_DIR --knows-out
     .....................................................................
@@ -28,7 +45,8 @@ The ``.knows`` file now contains the following::
         src.tests.test_load_data_statements:TestSQLStatement.test_to_sql_import
         src.tests.test_load_data_statements:TestSQLStatement.test_to_sql_schema_update
 
-and you can pass in ``load_data/sql_utils/checkpoints.py`` to nose::
+You can now run **nose-knows** in input mode, passing in
+``load_data/sql_utils/checkpoints.py``::
 
     eyal-01575:src eyal$ nosetests --with-knows --knows-dir=$BASE_DIR load_data/sql_utils/checkpoints.py
     .......
@@ -105,5 +123,10 @@ and run it against the set of changed files from a commit. Ours looks like::
         nosetests $KNOWS_FLAGS $@
     }
 
+License
+========
+
 **nose-knows** is copyright 2013 Eventbrite and Contributors, and is made
 available under BSD-style license; see LICENSE for details.
+
+.. _`latest development version`: https://github.com/eventbrite/nose-knows/tarball/master#egg=nose-nose
