@@ -7,14 +7,18 @@ from base import Knows
 
 
 def parse_test_name(test_name):
-    begin = test_name.index('<') + 1
-    end = test_name.index('>')
-    inside_brackets = test_name[begin:end]
-    test_module_and_class, test_method = inside_brackets.split(' ', 1)
-    if test_method.startswith('testMethod='):
-        test_method = test_method[len('testMethod='):]
-    test_module, test_class = test_module_and_class.rsplit('.', 1)
-    return test_module + ':' + test_class + '.' + test_method
+    try:
+        begin = test_name.index('<') + 1
+        end = test_name.index('>')
+        inside_brackets = test_name[begin:end]
+        test_module_and_class, test_method = inside_brackets.split(' ', 1)
+        if test_method.startswith('testMethod='):
+            test_method = test_method[len('testMethod='):]
+        test_module, test_class = test_module_and_class.rsplit('.', 1)
+        return test_module + ':' + test_class + '.' + test_method
+    except ValueError:
+        # Could not determine test name.
+        return ''
 
 
 class KnowsNosePlugin(Plugin):
