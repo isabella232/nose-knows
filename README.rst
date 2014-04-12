@@ -23,7 +23,9 @@ Using nose-knows
 (``--knows-out``) it will generate a ``.knows`` file that contains the mapping
 from a file in your code tree to the set of unit tests that run it. In input
 mode, it uses the ``.knows`` file to selectively run unit tests based on the
-files you pass in.
+files you pass in. Note: here, ``$BASE_DIR`` is the name of the base project
+directory, not the (direct / relative) path to it. It is used to figure out how
+to rename the file names in the output file to make it more portable.
 
 Creating a ``.knows`` file::
 
