@@ -1,24 +1,46 @@
 import logging
 import os
+import re
+import sys
 
 from nose.plugins import Plugin
 
 from base import Knows
 
 
+def modname(qualname):
+    candidate = qualname[0]
+    for elem in qualname[1:]:
+        if ".".join((candidate, elem)) not in sys.modules:
+            return candidate
+        candidate = ".".join((candidate, elem))
+
+# nose generates two types of test names: unittest-based test cases
+# are named "Test(<module.class testMethod=method>"). Non-unittest
+# test cases (functions and methods) simply have a dotted name like
+# "Test(module.class.method)".
+TESTMETH = re.compile(r"Test\(\<(?P<class>[\w_\.]+) "
+                      "testMethod=(?P<method>[\w_]+)\>\)")
+TESTFUNC = re.compile(r"Test\((?P<func>[\w_\.]+)\)")
+
+
 def parse_test_name(test_name):
-    try:
-        begin = test_name.index('<') + 1
-        end = test_name.index('>')
-        inside_brackets = test_name[begin:end]
-        test_module_and_class, test_method = inside_brackets.split(' ', 1)
-        if test_method.startswith('testMethod='):
-            test_method = test_method[len('testMethod='):]
-        test_module, test_class = test_module_and_class.rsplit('.', 1)
-        return test_module + ':' + test_class + '.' + test_method
-    except ValueError:
-        # Could not determine test name.
-        return ''
+    # Try to match both name styles we know.
+    mo = TESTMETH.match(test_name)
+    if mo:
+        qualname = mo.groupdict()["class"].split(".")
+        method_name = mo.groupdict()["method"]
+        module_name = ".".join(qualname[:-1])
+        class_name = qualname[-1]
+        return "%s:%s.%s" % (module_name, class_name, method_name)
+    mo = TESTFUNC.match(test_name)
+    if mo:
+        qualname = mo.groupdict()["func"].split(".")
+        module_name = modname(qualname)
+        func_name = qualname[-1]
+        return "%s:%s" % (module_name, func_name)
+    # No match
+    return ''
 
 
 class KnowsNosePlugin(Plugin):
