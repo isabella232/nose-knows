@@ -1,6 +1,11 @@
 News
 ====
 
+0.1.2
+-----
+
+Adding support for non-unittest based tests with nose.
+
 0.1.1
 -----
 
