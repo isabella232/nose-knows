@@ -22,6 +22,7 @@ class Knows(object):
         self.logger = logger or logging.getLogger('nose.plugins.knows')
         self.exclude = exclude or []
         self.knows_filename = knows_filename
+        self.knows_dir_length = len(self.knows_dir) + 1
 
     def get_tests_to_run(self, input_files):
         tests_to_run = []
@@ -62,23 +63,9 @@ class Knows(object):
 
     def tracer(self, frame, event, arg):
         filename = frame.f_code.co_filename
-        for exclude_string in self.exclude:
-            if exclude_string in filename:
-                break
-        else:
-            if self.test_name and self.knows_dir in filename:
-                start_pos = filename.index(self.knows_dir)
-                length = len(self.knows_dir) + 1
-                filename = filename[start_pos + length:]
-
-                if self.test_name not in self.test_map[filename]:
-                    self.logger.info(
-                        'Found file %s touched by test %s.',
-                        filename,
-                        self.test_name,
-                    )
-                    self.test_map[filename].add(self.test_name)
-
+        if self.test_name and filename.startswith(self.knows_dir):
+            filename = filename[self.knows_dir_length:]
+            self.test_map[filename].add(self.test_name)
         return self.tracer
 
     def start_test(self, test):
