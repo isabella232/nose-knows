@@ -62,11 +62,18 @@ class Knows(object):
             sys.settrace(self.tracer)
 
     def tracer(self, frame, event, arg):
-        filename = frame.f_code.co_filename
-        if self.test_name and filename.startswith(self.knows_dir):
-            filename = filename[self.knows_dir_length:]
-            self.test_map[filename].add(self.test_name)
-        return self.tracer
+        if event == 'line' or event == 'exception':
+            # continue tracing, but skip the work of recording the result.
+            return self.tracer
+
+        if event == 'call':
+            filename = frame.f_code.co_filename
+            if self.test_name and filename.startswith(self.knows_dir):
+                filename = filename[self.knows_dir_length:]
+                self.test_map[filename].add(self.test_name)
+            return self.tracer
+
+        # We don't need to do any work for other events.
 
     def start_test(self, test):
         self.test_name = test
