@@ -63,7 +63,11 @@ class Knows(object):
         filename = frame.f_code.co_filename
         if self.test_name and filename.startswith(self.knows_dir):
             filename = filename[self.knows_dir_length:]
-            self.test_map[filename].add(self.test_name)
+            for exclude in self.exclude:
+                if filename.startswith(exclude):
+                    break
+            else:
+                self.test_map[filename].add(self.test_name)
 
     def start_test(self, test):
         self.test_name = test
