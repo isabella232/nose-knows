@@ -82,6 +82,14 @@ class KnowsNosePlugin(Plugin):
             dest='knows_exclude',
             help='Exclude files having this string (can use multiple times).',
         )
+        parser.add_option(
+            '--knows-limit',
+            type='int',
+            action='store',
+            default=0,
+            dest='knows_limit',
+            help='Exclude keys from the mapping if they would have over this many tests.',
+        )
         super(KnowsNosePlugin, self).options(parser, env=env)
 
     def configure(self, options, config):
@@ -92,6 +100,7 @@ class KnowsNosePlugin(Plugin):
                 output=options.knows_out,
                 knows_directory=options.knows_dir,
                 exclude=options.knows_exclude,
+                limit=options.knows_limit,
             )
             input_files = config.testNames
             if not options.knows_out:

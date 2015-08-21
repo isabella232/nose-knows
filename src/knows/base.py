@@ -12,6 +12,7 @@ class Knows(object):
         knows_directory='',
         logger=None,
         exclude=None,
+        limit=0,
     ):
         self.test_map = defaultdict(set)
         self.output = output
@@ -21,6 +22,7 @@ class Knows(object):
         self.exclude = exclude or []
         self.knows_filename = knows_filename
         self.knows_dir_length = len(self.knows_dir) + 1
+        self.limit = limit
 
     def get_tests_to_run(self, input_files):
         tests_to_run = []
@@ -81,6 +83,9 @@ class Knows(object):
         if self.output:
             with open(self.knows_filename, 'w') as output_fh:
                 for fname, tests in self.test_map.iteritems():
+                    if self.limit and len(tests) > self.limit:
+                        continue
+
                     output_fh.write('%s:\n' % (fname,))
                     for t in tests:
                         output_fh.write('\t%s\n' % (t,))
