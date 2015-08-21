@@ -1,8 +1,7 @@
+from collections import defaultdict
 import logging
 import os
 import sys
-
-from collections import defaultdict
 
 
 class Knows(object):
@@ -61,13 +60,16 @@ class Knows(object):
 
     def tracer(self, frame, event, arg):
         filename = frame.f_code.co_filename
+
         if self.test_name and filename.startswith(self.knows_dir):
             filename = filename[self.knows_dir_length:]
+
             for exclude in self.exclude:
                 if filename.startswith(exclude):
                     break
             else:
-                self.test_map[filename].add(self.test_name)
+                func_name = frame.f_code.co_name
+                self.test_map[filename + ':' + func_name].add(self.test_name)
 
     def start_test(self, test):
         self.test_name = test
